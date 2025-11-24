@@ -6,11 +6,10 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"strings"
 	"time"
 )
 
-const _gecosInfoCreateVirtualSession = "dcv_create_virtual_session"
+const _gecosInfoGoDCVManaged = "go_dcv_managed"
 
 func main() {
 	ctx := context.Background()
@@ -35,34 +34,17 @@ func run(context.Context) error {
 	defer ticker.Stop()
 	slog.Info("Re-reading /etc/passwd periodically", "period", period)
 	for range ticker.C {
+		// remove all sessions for which the user does not exist anymore
+		err = pruneVirtualSessions()
+		if err != nil {
+			return err
+		}
+		// create new virtual sessions for newly added sessions
 		err = createVirtualSessionFromPasswd(storagePath)
 		if err != nil {
 			slog.Error("failed to create virtual sessions from passwd", "msg", err.Error())
 		}
 	}
 	<-make(chan struct{})
-	return nil
-}
-
-func createVirtualSessionFromPasswd(storagePath string) error {
-	passwd, err := os.ReadFile("/etc/passwd")
-	if err != nil {
-		return err
-	}
-	for entry := range strings.SplitSeq(string(passwd), "\n") {
-		fields := strings.Split(entry, ":")
-		if len(fields) != 7 {
-			continue
-		}
-		passwdEntry := ParsePasswdEntry(entry)
-		switch passwdEntry.GECOS {
-		case _gecosInfoCreateVirtualSession:
-			slog.Info("creating virtual session", "user", passwdEntry.Username)
-			err := createVirtualSessionFromPasswdEntry(passwdEntry, storagePath)
-			if err != nil {
-				return err
-			}
-		}
-	}
 	return nil
 }
