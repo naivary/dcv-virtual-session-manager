@@ -36,6 +36,7 @@ func run(context.Context) error {
 	defer ticker.Stop()
 	slog.Info("Re-reading /etc/passwd periodically", "period", period)
 	for range ticker.C {
+		slog.Info("Next tick started...")
 		// remove all sessions for which the user does not exist anymore
 		if err := pruneVirtualSessions(); err != nil {
 			return err
@@ -45,6 +46,7 @@ func run(context.Context) error {
 			slog.Error("failed to create virtual sessions from passwd", "msg", err.Error())
 			return err
 		}
+		slog.Info("Successfully completed tick!")
 	}
 	return nil
 }
