@@ -18,7 +18,7 @@ go build -o dcv-virtual-session-manager
 # /etc/systemd/system/dcv-virtual-session-manager.service
 [Unit]
 Description=DCV Virtual Session Manager
-Requires=dcvserber.service
+Requires=dcvserver.service
 After=dcvserver.service
 
 [Service]
