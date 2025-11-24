@@ -26,8 +26,10 @@ func run(context.Context) error {
 	flag.DurationVar(&period, "period", 5*time.Minute, "period at which /etc/passwd is re-read")
 	flag.Parse()
 
-	err := createVirtualSessionFromPasswd(storagePath)
-	if err != nil {
+	if err := pruneVirtualSessions(); err != nil {
+		return err
+	}
+	if err := createVirtualSessionFromPasswd(storagePath); err != nil {
 		return err
 	}
 	ticker := time.NewTicker(period)
@@ -35,16 +37,14 @@ func run(context.Context) error {
 	slog.Info("Re-reading /etc/passwd periodically", "period", period)
 	for range ticker.C {
 		// remove all sessions for which the user does not exist anymore
-		err = pruneVirtualSessions()
-		if err != nil {
+		if err := pruneVirtualSessions(); err != nil {
 			return err
 		}
 		// create new virtual sessions for newly added sessions
-		err = createVirtualSessionFromPasswd(storagePath)
-		if err != nil {
+		if err := createVirtualSessionFromPasswd(storagePath); err != nil {
 			slog.Error("failed to create virtual sessions from passwd", "msg", err.Error())
+			return err
 		}
 	}
-	<-make(chan struct{})
 	return nil
 }

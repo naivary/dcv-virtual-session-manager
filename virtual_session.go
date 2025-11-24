@@ -13,6 +13,28 @@ type VirtualSession struct {
 	StorageRoot string `json:"storage-root"`
 }
 
+func pruneVirtualSessions() error {
+	users, err := listManagedLinuxUsers()
+	if err != nil {
+		return err
+	}
+	sessions, err := listVirtualSessions()
+	if err != nil {
+		return err
+	}
+	for _, session := range sessions {
+		_, ok := users[session.Owner]
+		if ok {
+			continue
+		}
+		err := deleteVirtualSession(session.ID)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func createVirtualSessionFromLinuxUser(e *LinuxUser, storageRoot string) error {
 	session := VirtualSession{
 		Name:        e.Username,
@@ -31,28 +53,6 @@ func createVirtualSessionFromPasswd(storagePath string) error {
 	}
 	for _, user := range users {
 		err := createVirtualSessionFromLinuxUser(user, storagePath)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func pruneVirtualSessions() error {
-	users, err := listManagedLinuxUsers()
-	if err != nil {
-		return err
-	}
-	sessions, err := listVirtualSessions()
-	if err != nil {
-		return err
-	}
-	for _, session := range sessions {
-		_, ok := users[session.Owner]
-		if ok {
-			continue
-		}
-		err := deleteVirtualSession(session.ID)
 		if err != nil {
 			return err
 		}
