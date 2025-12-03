@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+const _gecosInfoGoDCVManaged = "go_dcv_managed"
+
 type LinuxUser struct {
 	Username string
 	Password string
@@ -40,9 +42,11 @@ func listManagedLinuxUsers() (map[string]*LinuxUser, error) {
 			continue
 		}
 		linuxUser := ParseLinuxUser(entry)
-		switch linuxUser.GECOS {
-		case _gecosInfoGoDCVManaged:
-			users[linuxUser.Username] = linuxUser
+		for gecosInfo := range strings.SplitSeq(linuxUser.GECOS, ",") {
+			switch gecosInfo {
+			case _gecosInfoGoDCVManaged:
+				users[linuxUser.Username] = linuxUser
+			}
 		}
 	}
 	return users, nil

@@ -24,9 +24,11 @@ func pruneVirtualSessions() error {
 	}
 	for _, session := range sessions {
 		_, ok := users[session.Owner]
+		// user and session are existing
 		if ok {
 			continue
 		}
+		// session is existing without the user
 		err := deleteVirtualSession(session.ID)
 		if err != nil {
 			return err

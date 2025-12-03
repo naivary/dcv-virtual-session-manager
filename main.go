@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-const _gecosInfoGoDCVManaged = "go_dcv_managed"
-
 func main() {
 	ctx := context.Background()
 	if err := run(ctx); err != nil {
